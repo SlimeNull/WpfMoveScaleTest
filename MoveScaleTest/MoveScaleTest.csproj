@@ -9,7 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Images\" />
+    <None Remove="Images\Bg.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EleCho.WpfSuite.Helpers" Version="0.9.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\Bg.jpg" />
   </ItemGroup>
 
 </Project>

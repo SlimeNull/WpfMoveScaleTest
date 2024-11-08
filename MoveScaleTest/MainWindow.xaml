@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ws="https://schemas.elecho.dev/wpfsuite"
         xmlns:local="clr-namespace:MoveScaleTest"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        ws:WindowOption.IsDarkMode="True">
     <Grid>
         <Border Background="{local:CheckerboardBrush Brush1=#424242,Brush2=#1f1f1f,TileSize=8}">
             <local:MoveScaleHost x:Name="moveScaleHost"
@@ -18,13 +20,23 @@
                                   Click="MenuItem_Click" />
                     </ContextMenu>
                 </local:MoveScaleHost.ContextMenu>
-                <Border Background="Gray"
-                        CornerRadius="5">
-                    <TextBlock Text="QwQ"
-                               FontSize="64"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center"/>
-                </Border>
+                <Grid Margin="14">
+                    <Border CornerRadius="16">
+                        <Border.Background>
+                            <ImageBrush ImageSource="Images/Bg.jpg"/>
+                        </Border.Background>
+                    </Border>
+                    <Border CornerRadius="12"
+                            Padding="26 12"
+                            Background="#88FFFFFF"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="QwQ"
+                                   FontSize="64"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                </Grid>
             </local:MoveScaleHost>
         </Border>
     </Grid>
