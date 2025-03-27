@@ -226,6 +226,8 @@ namespace MoveScaleTest
 
             if (_isMoving)
             {
+                StopAllAnimations();
+
                 _startOffset = Offset;
                 _startMousePosition = Mouse.GetPosition(this);
             }
@@ -277,9 +279,24 @@ namespace MoveScaleTest
             }
         }
 
+        void CalculateScaleBy(double factor, out double newScale)
+        {
+            newScale = Scale * factor;
+
+            if (_runningScaleAnimation is not null)
+            {
+                newScale = _animationTargetScale * factor;
+            }
+        }
+
         void CalculateScaleBy(Point normalizedCenter, double factor, out Vector newOffset, out double newScale)
         {
             newScale = Scale * factor;
+
+            if (_runningScaleAnimation is not null)
+            {
+                newScale = _animationTargetScale * factor;
+            }
 
             if (ContentHost is not FrameworkElement contentHost)
             {
@@ -371,6 +388,23 @@ namespace MoveScaleTest
             _animationTargetScale = newScale;
         }
 
+        void StopAllAnimations()
+        {
+            if (_runningOffsetAnimation is not null)
+            {
+                var offset = Offset;
+                BeginAnimation(OffsetProperty, null);
+                Offset = offset;
+            }
+
+            if (_runningScaleAnimation is not null)
+            {
+                var scale = Scale;
+                BeginAnimation(ScaleProperty, null);
+                Scale = scale;
+            }
+        }
+
         public void ScaleTo(double newScale)
         {
             if (EasingDuration.HasTimeSpan &&
@@ -386,7 +420,7 @@ namespace MoveScaleTest
 
         public void ScaleBy(double factor)
         {
-            ScaleBy(Scale * factor);
+            ScaleTo(Scale * factor);
         }
 
         public void ScaleTo(Point normalizedCenter, double newScale)
