@@ -125,8 +125,8 @@ namespace MoveScaleTest
                 return;
             }
 
-            host.ApplyOffsetAndScale();
-        }
+                host.ApplyOffsetAndScale();
+            }
 
         private static void OnMaximumOffsetDistanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -135,17 +135,17 @@ namespace MoveScaleTest
                 return;
             }
 
-            if (e.NewValue is double newValue &&
-                !double.IsNaN(newValue) &&
+                if (e.NewValue is double newValue &&
+                    !double.IsNaN(newValue) &&
                 host.Offset.LengthSquared > (newValue * newValue))
-            {
-                var newOffset = host.Offset;
-                newOffset.Normalize();
-                newOffset *= newValue;
+                {
+                    var newOffset = host.Offset;
+                    newOffset.Normalize();
+                    newOffset *= newValue;
 
-                host.Offset = newOffset;
+                    host.Offset = newOffset;
+                }
             }
-        }
 
         private static void OnMaximumScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -154,13 +154,13 @@ namespace MoveScaleTest
                 return;
             }
 
-            if (e.NewValue is double newValue &&
-                !double.IsNaN(newValue) &&
-                host.Scale > newValue)
-            {
-                host.Scale = newValue;
+                if (e.NewValue is double newValue &&
+                    !double.IsNaN(newValue) &&
+                    host.Scale > newValue)
+                {
+                    host.Scale = newValue;
+                }
             }
-        }
 
         private static void OnMinimumScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -169,13 +169,13 @@ namespace MoveScaleTest
                 return;
             }
 
-            if (e.NewValue is double newValue &&
-                !double.IsNaN(newValue) &&
-                host.Scale < newValue)
-            {
-                host.Scale = newValue;
+                if (e.NewValue is double newValue &&
+                    !double.IsNaN(newValue) &&
+                    host.Scale < newValue)
+                {
+                    host.Scale = newValue;
+                }
             }
-        }
 
         private static object CoerceOffset(DependencyObject d, object baseValue)
         {
@@ -185,40 +185,40 @@ namespace MoveScaleTest
                 return baseValue;
             }
 
-            var maxOffsetDistance = host.MaxOffsetDistance;
+                var maxOffsetDistance = host.MaxOffsetDistance;
             if (baseOffset.LengthSquared > (maxOffsetDistance * maxOffsetDistance))
-            {
-                var newOffset = baseOffset;
-                newOffset.Normalize();
-                newOffset *= maxOffsetDistance;
+                {
+                    var newOffset = baseOffset;
+                    newOffset.Normalize();
+                    newOffset *= maxOffsetDistance;
 
-                return newOffset;
+                    return newOffset;
+                }
+
+                return baseValue;
             }
-
-            return baseValue;
-        }
 
         private static object CoerceScale(DependencyObject d, object baseValue)
         {
             if (d is not MoveScaleHost host ||
                 baseValue is not double baseScale)
             {
-                return baseValue;
-            }
-
-            var minScale = host.MinScale;
-            var maxScale = host.MaxScale;
-            if (baseScale < minScale)
-            {
-                return minScale;
-            }
-            else if (baseScale > maxScale)
-            {
-                return maxScale;
-            }
-
             return baseValue;
         }
+
+                var minScale = host.MinScale;
+                var maxScale = host.MaxScale;
+                if (baseScale < minScale)
+                {
+                    return minScale;
+                }
+                else if (baseScale > maxScale)
+                {
+                    return maxScale;
+                }
+
+                return baseValue;
+            }
 
         void StartMove()
         {
@@ -254,30 +254,30 @@ namespace MoveScaleTest
                 return;
             }
 
-            if (transformHost.RenderTransform is TransformGroup transformGroup &&
-                transformGroup.Children.Count == 2 &&
-                transformGroup.Children[0] is ScaleTransform scaleTransform &&
-                transformGroup.Children[1] is TranslateTransform translateTransform)
-            {
-                translateTransform.X = Offset.X;
-                translateTransform.Y = Offset.Y;
-                scaleTransform.ScaleX = Scale;
-                scaleTransform.ScaleY = Scale;
-            }
-            else
-            {
-                transformHost.RenderTransform = new TransformGroup()
+                if (transformHost.RenderTransform is TransformGroup transformGroup &&
+                    transformGroup.Children.Count == 2 &&
+                    transformGroup.Children[0] is ScaleTransform scaleTransform &&
+                    transformGroup.Children[1] is TranslateTransform translateTransform)
                 {
-                    Children =
+                    translateTransform.X = Offset.X;
+                    translateTransform.Y = Offset.Y;
+                    scaleTransform.ScaleX = Scale;
+                    scaleTransform.ScaleY = Scale;
+                }
+                else
+                {
+                    transformHost.RenderTransform = new TransformGroup()
+                    {
+                        Children =
                     {
                         new ScaleTransform(),
                         new TranslateTransform(),
                     }
-                };
+                    };
 
-                ApplyOffsetAndScale();
+                    ApplyOffsetAndScale();
+                }
             }
-        }
 
         void CalculateScaleBy(double factor, out double newScale)
         {
@@ -286,30 +286,51 @@ namespace MoveScaleTest
             if (_runningScaleAnimation is not null)
             {
                 newScale = _animationTargetScale * factor;
-            }
+        }
         }
 
         void CalculateScaleBy(Point normalizedCenter, double factor, out Vector newOffset, out double newScale)
         {
-            newScale = Scale * factor;
+            double baseScale;
+            Vector baseOffset;
 
-            if (_runningScaleAnimation is not null)
+            if (_runningScaleAnimation != null)
             {
-                newScale = _animationTargetScale * factor;
+                baseScale = _animationTargetScale;
+                baseOffset = _animationTargetOffset;
+            }
+            else
+            {
+                baseScale = Scale;
+                baseOffset = Offset;
             }
 
-            if (ContentHost is not FrameworkElement contentHost)
+            newScale = baseScale * factor;
+            if (!double.IsNaN(MinScale)) newScale = Math.Max(MinScale, newScale);
+            if (!double.IsNaN(MaxScale)) newScale = Math.Min(MaxScale, newScale);
+
+            double effectiveFactor = (baseScale == 0 || newScale == 0) ? 1.0 : newScale / baseScale;
+
+            if (ContentHost is not FrameworkElement contentHost) 
             {
                 return;
             }
 
             var transformOrigin = OriginPoint;
             var normalizedOffsetFromOrigin = normalizedCenter - transformOrigin;
-            var standardNormalizedOffsetDiff = 1 / factor - 1;
-            var normalizedOffsetDiff = new Vector(standardNormalizedOffsetDiff * normalizedOffsetFromOrigin.X, standardNormalizedOffsetDiff * normalizedOffsetFromOrigin.Y);
-            var absoluteOffsetDiff = new Vector(normalizedOffsetDiff.X * ClientWidth * newScale, normalizedOffsetDiff.Y * ClientHeight * newScale);
 
-            newOffset = Offset + absoluteOffsetDiff;
+            var standardNormalizedOffsetDiff = 1.0 / effectiveFactor - 1.0;
+            var normalizedOffsetDiff = new Vector(
+                standardNormalizedOffsetDiff * normalizedOffsetFromOrigin.X,
+                standardNormalizedOffsetDiff * normalizedOffsetFromOrigin.Y
+            );
+
+            var absoluteOffsetDiff = new Vector(
+                normalizedOffsetDiff.X * ClientWidth * newScale,
+                normalizedOffsetDiff.Y * ClientHeight * newScale
+            );
+
+            newOffset = baseOffset + absoluteOffsetDiff;
         }
 
         void CalculateMakePointCenter(Point normalizedPoint, out Vector newOffset)
@@ -319,15 +340,15 @@ namespace MoveScaleTest
                 return;
             }
 
-            var scale = Scale;
-            var originPoint = OriginPoint;
+                var scale = Scale;
+                var originPoint = OriginPoint;
 
-            var normalizedCenter = new Point(originPoint.X + (0.5 - originPoint.X) / scale, originPoint.Y + (0.5 - originPoint.Y) / scale);
-            var normalizedOffsetFromCenter = new Point(normalizedPoint.X - normalizedCenter.X, normalizedPoint.Y - normalizedCenter.Y);
-            var pixelOffsetFromCenter = new Vector(normalizedOffsetFromCenter.X * ClientWidth * scale, normalizedOffsetFromCenter.Y * ClientHeight * scale);
+                var normalizedCenter = new Point(originPoint.X + (0.5 - originPoint.X) / scale, originPoint.Y + (0.5 - originPoint.Y) / scale);
+                var normalizedOffsetFromCenter = new Point(normalizedPoint.X - normalizedCenter.X, normalizedPoint.Y - normalizedCenter.Y);
+                var pixelOffsetFromCenter = new Vector(normalizedOffsetFromCenter.X * ClientWidth * scale, normalizedOffsetFromCenter.Y * ClientHeight * scale);
 
-            newOffset = -pixelOffsetFromCenter;
-        }
+                newOffset = -pixelOffsetFromCenter;
+            }
 
         void AnimateOffset(Vector newOffset)
         {
@@ -399,10 +420,10 @@ namespace MoveScaleTest
 
             if (_runningScaleAnimation is not null)
             {
-                var scale = Scale;
-                BeginAnimation(ScaleProperty, null);
-                Scale = scale;
-            }
+            var scale = Scale;
+            BeginAnimation(ScaleProperty, null);
+            Scale = scale;
+        }
         }
 
         public void ScaleTo(double newScale)
@@ -481,17 +502,17 @@ namespace MoveScaleTest
                 return;
             }
 
-            var scale = Scale;
+                var scale = Scale;
 
-            var currentOrigin = OriginPoint;
-            var newOrigin = normalizedPoint;
-            var originDiff = newOrigin - currentOrigin;
-            var normalizedOffsetDiff = originDiff * (1 - 1 / scale);
-            var offsetDiff = new Vector(normalizedOffsetDiff.X * ClientWidth * scale, normalizedOffsetDiff.Y * ClientHeight * scale);
+                var currentOrigin = OriginPoint;
+                var newOrigin = normalizedPoint;
+                var originDiff = newOrigin - currentOrigin;
+                var normalizedOffsetDiff = originDiff * (1 - 1 / scale);
+                var offsetDiff = new Vector(normalizedOffsetDiff.X * ClientWidth * scale, normalizedOffsetDiff.Y * ClientHeight * scale);
 
-            Offset += offsetDiff;
-            OriginPoint = newOrigin;
-        }
+                Offset += offsetDiff;
+                OriginPoint = newOrigin;
+            }
 
         public void SetOriginPointToMousePosition()
         {
@@ -500,10 +521,10 @@ namespace MoveScaleTest
                 return;
             }
 
-            var mousePosition = Mouse.GetPosition(transformHost);
-            var normalizedMousePosition = new Point(mousePosition.X / transformHost.ActualWidth, mousePosition.Y / transformHost.ActualHeight);
-            SetOriginPoint(normalizedMousePosition);
-        }
+                var mousePosition = Mouse.GetPosition(transformHost);
+                var normalizedMousePosition = new Point(mousePosition.X / transformHost.ActualWidth, mousePosition.Y / transformHost.ActualHeight);
+                SetOriginPoint(normalizedMousePosition);
+            }
 
         public void SetCenterPoint(Point normalizedPoint)
         {
